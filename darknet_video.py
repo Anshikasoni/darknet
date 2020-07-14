@@ -54,8 +54,6 @@ def featureMatcher(frame, des1):
 netMain = None
 metaMain = None
 altNames = None
-def
-
 
 def YOLO():
     pathImg = glob.glob("target/*.jpg")
