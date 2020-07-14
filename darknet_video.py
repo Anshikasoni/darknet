@@ -15,7 +15,7 @@ def convertBack(x, y, w, h):
     return xmin, ymin, xmax, ymax
 
 
-def cvDrawBoxes(detections, img, trgts):
+def cvDrawBoxes(detections, img, trgts, finder):
     for detection in detections:
         x, y, w, h = detection[2][0],\
             detection[2][1],\
@@ -28,8 +28,7 @@ def cvDrawBoxes(detections, img, trgts):
         cv2.rectangle(img, pt1, pt2, (0, 255, 0), 1)
         for trgt in trgts:
             kp2, des2 = finder.detectAndCompute(trgt, None)
-            if(featureMatcher(img, des2)):
-                print("ITSSSSS WORKKKIIIINGGGGG!!!!!!!!!")
+            featureMatcher(img, des2)
         cv2.putText(img,
                     detection[0].decode() +
                     " [" + str(round(detection[1] * 100, 2)) + "]",
@@ -45,22 +44,23 @@ def featureMatcher(frame, des1):
     matches = bf.knnMatch(des1, des2, k = 2)
     good = []
     for m,n in matches:
-        if m.distance < lowe_ratio*n.distance
+        if m.distance < lowe_ratio*n.distance:
             good.append([m])
     if(len(good)>80):
-        return True
+        print("Yeah")
     else:
-        return False
+        print("Naah")
 netMain = None
 metaMain = None
 altNames = None
 
 def YOLO():
-    pathImg = glob.glob("target/*.jpg")
+    pathImg = glob.glob("target/*.png")
     cv_img = []
     for trgtImg in pathImg:
-        n = cv.imread(trgtImg)
+        n = cv2.imread(trgtImg)
         cv_img.append(n)
+    finder = cv2.ORB_create()
     global metaMain, netMain, altNames
     configPath = "./cfg/yolov4.cfg"
     weightPath = "./yolov4.weights"
@@ -123,10 +123,10 @@ def YOLO():
         darknet.copy_image_from_bytes(darknet_image,frame_resized.tobytes())
 
         detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.25)
-        image = cvDrawBoxes(detections, frame_resized, cv_img)
+        image = cvDrawBoxes(detections, frame_resized, cv_img, finder)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         print(1/(time.time()-prev_time))
-        cv2.imshow('Demo', image)
+        #cv2.imshow('Demo', image)
         cv2.waitKey(3)
     cap.release()
     out.release()
