@@ -5,7 +5,7 @@ import os
 import cv2
 import numpy as np
 import time
-import darknet
+import darknet, glob
 
 def convertBack(x, y, w, h):
     xmin = int(round(x - (w / 2)))
@@ -15,7 +15,7 @@ def convertBack(x, y, w, h):
     return xmin, ymin, xmax, ymax
 
 
-def cvDrawBoxes(detections, img):
+def cvDrawBoxes(detections, img, trgts):
     for detection in detections:
         x, y, w, h = detection[2][0],\
             detection[2][1],\
@@ -26,21 +26,43 @@ def cvDrawBoxes(detections, img):
         pt1 = (xmin, ymin)
         pt2 = (xmax, ymax)
         cv2.rectangle(img, pt1, pt2, (0, 255, 0), 1)
+        for trgt in trgts:
+            kp2, des2 = finder.detectAndCompute(trgt, None)
+            if(featureMatcher(img, des2)):
+                print("ITSSSSS WORKKKIIIINGGGGG!!!!!!!!!")
         cv2.putText(img,
                     detection[0].decode() +
                     " [" + str(round(detection[1] * 100, 2)) + "]",
                     (pt1[0], pt1[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     [0, 255, 0], 2)
     return img
-
-
+def featureMatcher(frame, des1):
+    lowe_ratio = 0.89
+    finder = cv2.ORB_create()
+    magic_number = 0.75
+    kp2, des2 = finder.detectAndCompute(frame, None)
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(des1, des2, k = 2)
+    good = []
+    for m,n in matches:
+        if m.distance < lowe_ratio*n.distance
+            good.append([m])
+    if(len(good)>80):
+        return True
+    else:
+        return False
 netMain = None
 metaMain = None
 altNames = None
+def
 
 
 def YOLO():
-
+    pathImg = glob.glob("target/*.jpg")
+    cv_img = []
+    for trgtImg in pathImg:
+        n = cv.imread(trgtImg)
+        cv_img.append(n)
     global metaMain, netMain, altNames
     configPath = "./cfg/yolov4.cfg"
     weightPath = "./yolov4.weights"
@@ -103,7 +125,7 @@ def YOLO():
         darknet.copy_image_from_bytes(darknet_image,frame_resized.tobytes())
 
         detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.25)
-        image = cvDrawBoxes(detections, frame_resized)
+        image = cvDrawBoxes(detections, frame_resized, cv_img)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         print(1/(time.time()-prev_time))
         cv2.imshow('Demo', image)
